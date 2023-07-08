@@ -19,7 +19,7 @@
                 where active.id is null";
         $result = $conn->query($sql);
         $missingSensors = array();
-        while ($row = $result->fetch_assoc()) 
+        while ($row = $result->fetch_assoc())  // add to response array and update in DB as non-active
         {
             $missingSensors[] = array(
                 'id' => $row['id'],
@@ -53,7 +53,7 @@
 
         $result = $conn->query($sql);
 
-        while ($row = $result->fetch_assoc()) 
+        while ($row = $result->fetch_assoc()) // as required, summerize data every hour and insert to DB table
         {
             $aggregatedDataSql = "
             INSERT INTO `hourly_temperature` (`id`, `face`, `date`, `temperature_value`, `hour`) 
@@ -85,7 +85,7 @@
         
         $result = $conn->query($sql);
         
-        while ($row = $result->fetch_assoc()) 
+        while ($row = $result->fetch_assoc()) // add each faulty sensor to response array and update in log DB
         {
             $malfunctioningSensors[] = array(
                 'sensor_id' => $row['id'],
@@ -119,11 +119,11 @@
     {
             $data = json_decode(file_get_contents('php://input'), true);
 
-            if (isset($data['face']) && in_array($data['face'], ["S", "E", "N", "W"])) 
+            if (isset($data['face']) && in_array($data['face'], ["S", "E", "N", "W"])) // make sure input is valid
             {
 
                 $conn = new mysqli($servername, $username, $password, $dbname);
-                $face = $conn->real_escape_string($data['face']);
+                $face = $conn->real_escape_string($data['face']); // injection protection
                 $sql = "INSERT INTO sensor (face) VALUES ('$face')";
                 
                 if ($conn->query($sql)) {
@@ -155,9 +155,9 @@
         {
             $conn = new mysqli($servername, $username, $password, $dbname);
             $id = intval($data['id']);
-            $face = $conn->real_escape_string($data['face']);
+            $face = $conn->real_escape_string($data['face']);  // injection protection
             $temperature = doubleval($data['temperature']);
-            $timestamp = $conn->real_escape_string($data['timestamp']);
+            $timestamp = $conn->real_escape_string($data['timestamp']);  // injection protection
 
             $sql_pre = "select * from sensor where id = $id and face LIKE '" . $face . "'";
             $result = mysqli_query($conn, $sql_pre);
